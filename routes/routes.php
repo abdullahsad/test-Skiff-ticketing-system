@@ -1,4 +1,6 @@
 <?php
+    // echo "hello world";
+    // die();
     require_once 'controllers/AuthController.php';
     require_once 'controllers/UserController.php';
     require_once 'controllers/DepartmentController.php';
@@ -35,6 +37,9 @@
             $data = json_decode(file_get_contents('php://input'), true);
             $ticketController = new TicketController($pdo);
             $ticketController->updateStatus($matches[1], $data);
+        }else{
+            http_response_code(404);
+            echo json_encode(['message' => 'Not Found']);
         }
     }
 ?>
