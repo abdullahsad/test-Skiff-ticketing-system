@@ -50,3 +50,13 @@ CREATE TABLE ticket_attachments (
     FOREIGN KEY (uploaded_by) REFERENCES users(id),
     FOREIGN KEY (ticket_id) REFERENCES tickets(id)
 );
+
+-- Token table for API authentication
+CREATE TABLE api_tokens (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    user_id INTEGER NOT NULL,
+    token varchar(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

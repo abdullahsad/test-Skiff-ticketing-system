@@ -5,19 +5,25 @@
     require_once 'controllers/UserController.php';
     require_once 'controllers/DepartmentController.php';
     require_once 'controllers/TicketController.php';
+    require_once 'helpers/auth.php';
 
     function handleRequest($pdo) {
         $method = $_SERVER['REQUEST_METHOD'];
         $uri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
-
-        if ($uri[0] === 'register' && $method === 'POST') {
+        if ($uri[count($uri) - 1] === 'register' && $method === 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);
             $userController = new UserController($pdo);
             $userController->register($data);
-        } elseif ($uri[0] === 'login' && $method === 'POST') {
+        } elseif ($uri[count($uri) - 1] === 'login' && $method === 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);
             $userController = new UserController($pdo);
-            $token = $userController->login($data);
+            $userController->login($data);
+        }elseif ($uri[count($uri) - 1] === 'get-user' && $method === 'GET') {
+            // $userController = new UserController($pdo);
+            // $token = $userController->get_user();
+            $user_id = Auth::checkAuth($pdo);
+            $userController = new UserController($pdo);
+            $userController->get_user($user_id);
         } elseif ($uri[0] === 'departments' && $method === 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);
             $departmentController = new DepartmentController($pdo);
