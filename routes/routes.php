@@ -10,6 +10,11 @@
     function handleRequest($pdo, $redis) {
         $method = $_SERVER['REQUEST_METHOD'];
         $script_name = dirname($_SERVER['SCRIPT_NAME']);
+
+        if ($script_name == '/') {
+            $script_name = '';
+        }
+
         $path = str_replace($script_name, '', $_SERVER['REQUEST_URI']);
         $path = trim(parse_url($path, PHP_URL_PATH), '/');
         $uri = explode('/', $path);
@@ -111,7 +116,7 @@
         }
         else{
             http_response_code(404);
-            echo json_encode(['message' => 'Not Found']);
+            echo json_encode(['message' => 'Page Not Found']);
         }
     }
 ?>

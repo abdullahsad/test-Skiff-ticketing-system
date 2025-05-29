@@ -203,6 +203,7 @@ class TicketController {
         } else{
             foreach ($tickets as &$ticket) {
                 $ticket['notes'] = $this->ticket->getNotes($ticket['id']);
+                $ticket['attachments'] = $this->ticket->getAttachments($ticket['id']);
             }
             http_response_code(200);
             echo json_encode($tickets);
@@ -227,6 +228,7 @@ class TicketController {
             }
         }
         $ticket['notes'] = $this->ticket->getNotes($ticket_id);
+        $ticket['attachments'] = $this->ticket->getAttachments($ticket_id);
         http_response_code(200);
         echo json_encode($ticket);
     }
