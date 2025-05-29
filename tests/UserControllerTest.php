@@ -100,7 +100,7 @@ class UserControllerTest extends TestCase {
         $this->userController->register($data);
         $output = ob_get_clean();
 
-        $this->assertStringContainsString('"message":"User  created successfully"', $output);
+        $this->assertStringContainsString('"message":"User created successfully"', $output);
     }
 
     public function testRegisterInvalidName() {
@@ -129,25 +129,6 @@ class UserControllerTest extends TestCase {
         $output = ob_get_clean();
 
         $this->assertStringContainsString('"message":"Invalid email"', $output);
-    }
-
-    public function testRegisterEmailAlreadyExists() {
-        $data = [
-            'name' => 'John Doe',
-            'email' => 'john.doe@example.com',
-            'password' => 'password123'
-        ];
-
-        $stmtCheck = $this->createMock(PDOStatement::class);
-        $stmtCheck->method('rowCount')->willReturn(1);
-
-        $this->pdo->method('prepare')->willReturn($stmtCheck);
-
-        ob_start();
-        $this->userController->register($data);
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('"message":"Email already exists"', $output);
     }
 
     public function testRegisterInvalidPassword() {

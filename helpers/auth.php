@@ -26,7 +26,6 @@ class Auth {
 
     public static function checkAdmin($pdo) {
         $user_id = self::checkAuth($pdo);
-
         $sql = $pdo->prepare("SELECT role FROM users WHERE id = ?");
         $sql->execute([$user_id]);
         $role = $sql->fetchColumn();
@@ -36,7 +35,36 @@ class Auth {
             echo json_encode(['message' => 'Forbidden']);
             exit();
         }
-
         return $user_id;
+    }
+
+    public static function checkAdminOrAgent($pdo) {
+        $user_id = self::checkAuth($pdo);
+        $sql = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+        $sql->execute([$user_id]);
+        $role = $sql->fetchColumn();
+
+        if ($role !== 'admin' && $role !== 'agent') {
+            http_response_code(403);
+            echo json_encode(['message' => 'Forbidden']);
+            exit();
+        }
+        return $user_id;
+    }
+
+    public static function getToken($pdo) {
+        $headers = getallheaders();
+        if (!isset($headers['Authorization'])) {
+            return null;
+        }
+        $token = str_replace('Bearer ', '', $headers['Authorization']);
+        return $token;
+    }
+
+    public static function getRole($pdo) {
+        $user_id = self::checkAuth($pdo);
+        $sql = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+        $sql->execute([$user_id]);
+        return $sql->fetchColumn();
     }
 }

@@ -1,7 +1,6 @@
 <?php
     // echo "hello world";
     // die();
-    require_once 'controllers/AuthController.php';
     require_once 'controllers/UserController.php';
     require_once 'controllers/DepartmentController.php';
     require_once 'controllers/TicketController.php';
@@ -9,41 +8,83 @@
 
     function handleRequest($pdo) {
         $method = $_SERVER['REQUEST_METHOD'];
-        $uri = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
-        if ($uri[count($uri) - 1] === 'register' && $method === 'POST') {
+        $script_name = dirname($_SERVER['SCRIPT_NAME']);
+        $path = str_replace($script_name, '', $_SERVER['REQUEST_URI']);
+        $path = trim(parse_url($path, PHP_URL_PATH), '/');
+        $uri = explode('/', $path);
+        if ($uri[0] === 'register' && $method === 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);
             $userController = new UserController($pdo);
             $userController->register($data);
-        } elseif ($uri[count($uri) - 1] === 'login' && $method === 'POST') {
+        } elseif ($uri[0] === 'login' && $method === 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);
             $userController = new UserController($pdo);
             $userController->login($data);
-        }elseif ($uri[count($uri) - 1] === 'get-user' && $method === 'GET') {
-            // $userController = new UserController($pdo);
-            // $token = $userController->get_user();
+        } elseif ($uri[0] === 'logout' && $method === 'POST') {
+            $user_id = Auth::checkAuth($pdo);
+            $token = Auth::getToken($pdo);
+            $userController = new UserController($pdo);
+            $userController->logout($token);
+        } elseif ($uri[0] === 'get-user' && $method === 'GET') {
             $user_id = Auth::checkAuth($pdo);
             $userController = new UserController($pdo);
             $userController->get_user($user_id);
         } elseif ($uri[0] === 'departments' && $method === 'POST') {
+            Auth::checkAdmin($pdo);
             $data = json_decode(file_get_contents('php://input'), true);
             $departmentController = new DepartmentController($pdo);
             $departmentController->create($data);
-        } elseif (preg_match('/departments\/(\d+)/', $uri[0], $matches) && $method === 'PATCH') {
+        } elseif ($uri[0] === 'departments' && $method === 'GET' && count($uri) == 1) {
+            Auth::checkAdmin($pdo);
+            $departmentController = new DepartmentController($pdo);
+            $departmentController->index();
+        } elseif ($uri[0] === 'departments' && $method === 'GET' && count($uri) == 2) {
+            Auth::checkAdmin($pdo);
+            $departmentController = new DepartmentController($pdo);
+            $departmentController->show($uri[1]);
+        } elseif ($uri[0] === 'departments' && $method === 'PATCH' && count($uri) == 2) {
+            Auth::checkAdmin($pdo);
             $data = json_decode(file_get_contents('php://input'), true);
             $departmentController = new DepartmentController($pdo);
-            $departmentController->update($matches[1], $data);
-        } elseif (preg_match('/departments\/(\d+)/', $uri[0], $matches) && $method === 'DELETE') {
+            $departmentController->update($uri[1], $data);
+        } elseif ($uri[0] === 'departments' && $method === 'DELETE' && count($uri) == 2) {
+            Auth::checkAdmin($pdo);
             $departmentController = new DepartmentController($pdo);
-            $departmentController->delete($matches[1]);
-        } elseif ($uri[0] === 'tickets' && $method === 'POST') {
+            $departmentController->delete($uri[1]);
+        } elseif ($uri[0] === 'tickets' && $method === 'POST' && count($uri) == 1) {
+            $user_id = Auth::checkAuth($pdo);
             $data = json_decode(file_get_contents('php://input'), true);
             $ticketController = new TicketController($pdo);
-            $ticketController->create($data);
-        } elseif (preg_match('/tickets\/(\d+)\/status/', $uri[0], $matches) && $method === 'PATCH') {
+            $ticketController->create($data, $user_id);
+        } elseif ($uri[0] === 'tickets' && $method === 'GET' && count($uri) == 1) {
+            $role = Auth::getRole($pdo);
+            $ticketController = new TicketController($pdo);
+            $ticketController->index($_GET, $role);
+        } elseif ($uri[0] === 'tickets' && $method === 'GET' && count($uri) == 2) {
+            $ticketController = new TicketController($pdo);
+            $ticketController->show($uri[1]);
+        } elseif ($uri[0] === 'assign-ticket' && $method === 'POST' && count($uri) == 2) {
+            $user_id = Auth::checkAdminOrAgent($pdo);
             $data = json_decode(file_get_contents('php://input'), true);
             $ticketController = new TicketController($pdo);
-            $ticketController->updateStatus($matches[1], $data);
-        }else{
+            $ticketController->assign($uri[1], $data);
+        } elseif ($uri[0] === 'change-ticket-status' && $method === 'POST' && count($uri) == 2) {
+            $user_id = Auth::checkAdminOrAgent($pdo);
+            $data = json_decode(file_get_contents('php://input'), true);
+            $ticketController = new TicketController($pdo);
+            $ticketController->changeStatus($uri[1], $data);
+        } elseif ($uri[0] === 'tickets' && $method === 'DELETE' && count($uri) == 2) {
+            Auth::checkAdmin($pdo);
+            $ticketController = new TicketController($pdo);
+            $ticketController->delete($uri[1]);
+        }
+        elseif ($uri[0] === 'add-notes-to-ticket' && $method === 'POST' && count($uri) == 2) {
+            $user_id = Auth::checkAuth($pdo);
+            $data = json_decode(file_get_contents('php://input'), true);
+            $ticketController = new TicketController($pdo);
+            $ticketController->addNote($uri[1], $user_id, $data);
+        }
+        else{
             http_response_code(404);
             echo json_encode(['message' => 'Not Found']);
         }
