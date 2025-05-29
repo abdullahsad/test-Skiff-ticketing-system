@@ -11,9 +11,9 @@ class Auth {
 
         $token = str_replace('Bearer ', '', $headers['Authorization']);
 
-        $stmt = $pdo->prepare("SELECT user_id FROM api_tokens WHERE token = ? AND expires_at > NOW()");
-        $stmt->execute([$token]);
-        $user_id = $stmt->fetchColumn();
+        $sql = $pdo->prepare("SELECT user_id FROM api_tokens WHERE token = ? AND expires_at > NOW()");
+        $sql->execute([$token]);
+        $user_id = $sql->fetchColumn();
 
         if (!$user_id) {
             http_response_code(401);
@@ -27,9 +27,9 @@ class Auth {
     public static function checkAdmin($pdo) {
         $user_id = self::checkAuth($pdo);
 
-        $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
-        $stmt->execute([$user_id]);
-        $role = $stmt->fetchColumn();
+        $sql = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+        $sql->execute([$user_id]);
+        $role = $sql->fetchColumn();
 
         if ($role !== 'admin') {
             http_response_code(403);
