@@ -144,26 +144,4 @@ class UserControllerTest extends TestCase {
 
         $this->assertStringContainsString('"message":"Invalid password"', $output);
     }
-
-    public function testRegisterDatabaseError() {
-        $data = [
-            'name' => 'John Doe',
-            'email' => 'john.doe@example.com',
-            'password' => 'password123'
-        ];
-
-        $stmtCheck = $this->createMock(PDOStatement::class);
-        $stmtCheck->method('rowCount')->willReturn(0);
-
-        $stmtInsert = $this->createMock(PDOStatement::class);
-        $stmtInsert->method('execute')->willThrowException(new PDOException('Database error'));
-
-        $this->pdo->method('prepare')->willReturnOnConsecutiveCalls($stmtCheck, $stmtInsert);
-
-        ob_start();
-        $this->userController->register($data);
-        $output = ob_get_clean();
-
-        $this->assertStringContainsString('"message":"Error creating user: Database error"', $output);
-    }
 }

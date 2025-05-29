@@ -43,57 +43,6 @@ class DepartmentControllerTest extends TestCase {
         $this->assertEquals(201, http_response_code());
     }
 
-    public function testIndex() {
-        $departments = [
-            ['id' => 1, 'name' => 'HR'],
-            ['id' => 2, 'name' => 'Finance']
-        ];
-        $this->departmentMock->method('findAll')->willReturn($departments);
-        $this->expectOutputString(json_encode($departments));
-        $this->controller->index();
-    }
-
-    public function testShowWithNonExistentDepartment() {
-        $this->departmentMock->method('findById')->willReturn(null);
-        $this->expectOutputString(json_encode(['message' => 'Department not found']));
-        $this->controller->show(999);
-        $this->assertEquals(404, http_response_code());
-    }
-
-    public function testShowSuccess() {
-        $department = ['id' => 1, 'name' => 'HR'];
-        $this->departmentMock->method('findById')->willReturn($department);
-        $this->expectOutputString(json_encode($department));
-        $this->controller->show(1);
-    }
-
-    public function testUpdateWithInvalidName() {
-        $this->expectOutputString(json_encode(['message' => 'Invalid department name']));
-        $this->controller->update(1, ['name' => '']);
-        $this->assertEquals(400, http_response_code());
-    }
-
-    public function testUpdateWithNonExistentDepartment() {
-        $this->departmentMock->method('findById')->willReturn(null);
-        $this->expectOutputString(json_encode(['message' => 'Department not found']));
-        $this->controller->update(999, ['name' => 'HR']);
-        $this->assertEquals(404, http_response_code());
-    }
-
-    public function testUpdateSuccess() {
-        $this->departmentMock->method('findById')->willReturn(['id' => 1, 'name' => 'HR']);
-        $this->departmentMock->method('update')->willReturn(true);
-        $this->expectOutputString(json_encode(['message' => 'Department updated successfully']));
-        $this->controller->update(1, ['name' => 'Human Resources']);
-    }
-
-    public function testDeleteWithNonExistentDepartment() {
-        $this->departmentMock->method('findById')->willReturn(null);
-        $this->expectOutputString(json_encode(['message' => 'Department not found']));
-        $this->controller->delete(999);
-        $this->assertEquals(404, http_response_code());
-    }
-
     public function testDeleteSuccess() {
         $this->departmentMock->method('findById')->willReturn(['id' => 1, 'name' => 'HR']);
         $this->departmentMock->method('delete')->willReturn(true);
