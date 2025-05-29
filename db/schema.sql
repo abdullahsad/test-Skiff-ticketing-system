@@ -60,3 +60,7 @@ CREATE TABLE api_tokens (
     expires_at TIMESTAMP NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- Insert admin user
+INSERT INTO users (name, email, password_hash, role) VALUES
+('Admin User', 'admin@gmail.com', '$2y$10$0Wzasc5M4aALApr7coj0F.1WFTxPY3U0r2Pxy5GTQd6DCTe2YLpdW', 'admin');
