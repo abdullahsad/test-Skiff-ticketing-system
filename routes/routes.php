@@ -7,6 +7,39 @@
     require_once 'middleware/RateLimiter.php';
     require_once 'helpers/auth.php';
 
+    /**
+     * Handles incoming HTTP requests and routes them to the appropriate controller and method.
+     *
+     * @param PDO $pdo The PDO instance for database interactions.
+     * @param Redis $redis The Redis instance for caching and rate limiting.
+     *
+     * The function performs the following:
+     * - Parses the request URI and HTTP method.
+     * - Implements rate limiting for IP addresses and specific user actions.
+     * - Routes requests to various endpoints based on the URI and HTTP method:
+     *   - User-related endpoints:
+     *     - POST /register: Registers a new user.
+     *     - POST /login: Logs in a user.
+     *     - POST /logout: Logs out a user.
+     *     - GET /get-user: Retrieves the authenticated user's details.
+     *   - Department-related endpoints:
+     *     - POST /departments: Creates a new department (Admin only).
+     *     - GET /departments: Lists all departments (Admin only).
+     *     - GET /departments/{id}: Retrieves details of a specific department (Admin only).
+     *     - PATCH /departments/{id}: Updates a specific department (Admin only).
+     *     - DELETE /departments/{id}: Deletes a specific department (Admin only).
+     *   - Ticket-related endpoints:
+     *     - POST /tickets: Creates a new ticket (supports JSON and multipart/form-data).
+     *     - GET /tickets: Lists all tickets (role-based access).
+     *     - GET /tickets/{id}: Retrieves details of a specific ticket.
+     *     - DELETE /tickets/{id}: Deletes a specific ticket (Admin only).
+     *     - POST /assign-ticket/{id}: Assigns a ticket to a user (Admin or Agent only).
+     *     - POST /change-ticket-status/{id}: Changes the status of a ticket (Admin or Agent only).
+     *     - POST /add-notes-to-ticket/{id}: Adds notes to a ticket.
+     * - Returns appropriate HTTP responses for success, errors, or invalid routes.
+     *
+     * @throws Exception If rate limiting is exceeded or authentication/authorization fails.
+     */
     function handleRequest($pdo, $redis) {
         $method = $_SERVER['REQUEST_METHOD'];
         $script_name = dirname($_SERVER['SCRIPT_NAME']);
