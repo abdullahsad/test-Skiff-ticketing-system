@@ -14,6 +14,39 @@ class Ticket {
         return $sql->execute([$title, $description, $user_id, $department_id]);
     }
 
+    public function createWithFiles($title, $description, $user_id, $department_id, $files) {
+        $this->pdo->beginTransaction();
+        try {
+            // echo "Creating ticket with files";
+            $this->create($title, $description, $user_id, $department_id);
+            $ticket_id = $this->pdo->lastInsertId();
+            if(!empty($files)){
+                for ($i = 0; $i < count($files['name']); $i++) {
+                    if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                        $name = $files['name'][$i];
+                        $tmp_name = $files['tmp_name'][$i];
+                        $file_name = uniqid() . '-' . basename($name);
+                        $file_path = 'uploads/' . $file_name;
+
+                        move_uploaded_file($tmp_name, $file_path);
+
+                        $sql = $this->pdo->prepare(
+                            "INSERT INTO ticket_attachments (ticket_id, file_path, uploaded_at, uploaded_by) VALUES (?, ?, NOW(), ?)"
+                        );
+                        $sql->execute([$ticket_id, $file_path, $user_id]);
+                    }
+                }
+            }
+            
+            $this->pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            // echo $e->getMessage();
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
     public function findById($id) {
         $sql = $this->pdo->prepare("SELECT * FROM tickets WHERE id = ?");
         $sql->execute([$id]);
@@ -85,6 +118,12 @@ class Ticket {
 
     public function getNotes($ticket_id) {
         $sql = $this->pdo->prepare("SELECT * FROM ticket_notes WHERE ticket_id = ? ORDER BY created_at ASC");
+        $sql->execute([$ticket_id]);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAttachments($ticket_id) {
+        $sql = $this->pdo->prepare("SELECT * FROM ticket_attachments WHERE ticket_id = ?");
         $sql->execute([$ticket_id]);
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }

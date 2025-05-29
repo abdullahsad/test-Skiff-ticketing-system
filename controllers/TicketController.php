@@ -1,15 +1,18 @@
 <?php
 
 require_once 'models/Ticket.php';
+require_once 'models/Department.php';
 
 class TicketController {
     private $ticket;
+    private $department;
 
     private $pdo;
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
         $this->ticket = new Ticket($pdo);
+        $this->department = new Department($pdo);
     }
 
     public function create($data, $user_id) {
@@ -27,6 +30,13 @@ class TicketController {
             http_response_code(400);
             echo json_encode(['message' => 'Missing department']);
             return;
+        } else{
+            $department = $this->department->findById($data['department_id']);
+            if (!$department) {
+                http_response_code(404);
+                echo json_encode(['message' => 'Department not found']);
+                return;
+            }
         }
 
         $result = $this->ticket->create(
@@ -38,10 +48,51 @@ class TicketController {
 
         if ($result) {
             http_response_code(201);
-            echo json_encode(['message' => 'Ticket submitted successfully']);
+            echo json_encode(['message' => 'Ticket created successfully']);
         } else {
             http_response_code(500);
-            echo json_encode(['message' => 'Failed to submit ticket']);
+            echo json_encode(['message' => 'Failed to create ticket']);
+        }
+    }
+
+    public function createWithFiles($data, $files, $user_id) {
+        if (empty($data['title']) || strlen(trim($data['title'])) < 3) {
+            http_response_code(400);
+            echo json_encode(['message' => 'Invalid title']);
+            return;
+        }
+        if (empty($data['description']) || strlen(trim($data['description'])) < 5) {
+            http_response_code(400);
+            echo json_encode(['message' => 'Invalid description']);
+            return;
+        }
+        if (empty($data['department_id'])) {
+            http_response_code(400);
+            echo json_encode(['message' => 'Missing department']);
+            return;
+        } else{
+            $department = $this->department->findById($data['department_id']);
+            if (!$department) {
+                http_response_code(404);
+                echo json_encode(['message' => 'Department not found']);
+                return;
+            }
+        }
+
+        $result = $this->ticket->createWithFiles(
+            trim($data['title']), 
+            trim($data['description']), 
+            $user_id, 
+            $data['department_id'], 
+            $files
+        );
+
+        if ($result) {
+            http_response_code(201);
+            echo json_encode(['message' => 'Ticket created successfully with files']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['message' => 'Failed to create ticket.']);
         }
     }
 
@@ -149,7 +200,7 @@ class TicketController {
             http_response_code(404);
             echo json_encode(['message' => 'No tickets found']);
             return;
-        }else{
+        } else{
             foreach ($tickets as &$ticket) {
                 $ticket['notes'] = $this->ticket->getNotes($ticket['id']);
             }
@@ -165,7 +216,7 @@ class TicketController {
             http_response_code(404);
             echo json_encode(['message' => 'Ticket not found']);
             return;
-        }else{
+        } else{
             if ($role !== 'admin' && $role !== 'agent') {
                 $user_id = Auth::checkAuth($this->pdo);
                 if ($ticket['user_id'] !== $user_id) {

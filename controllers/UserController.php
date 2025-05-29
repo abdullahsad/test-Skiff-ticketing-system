@@ -56,7 +56,7 @@ class UserController {
             http_response_code(401);
             echo json_encode(['message' => 'Invalid credentials']);
             return;
-        }else{
+        } else{
             $expires_at = date('Y-m-d H:i:s', strtotime('+12 hour')); 
             $token = $this->user->storeToken($user['id'], $expires_at);
             http_response_code(200);

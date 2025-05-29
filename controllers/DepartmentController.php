@@ -69,7 +69,6 @@ class DepartmentController {
         }
     }
 
-    // Delete department (DELETE /departments/{id})
     public function delete($id) {
         $existing = $this->department->findById($id);
         if (!$existing) {

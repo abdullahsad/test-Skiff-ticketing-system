@@ -12,5 +12,5 @@
             die();
         }
     }
-    handleRequest($pdo);
+    handleRequest($pdo, $redis);
 ?>
